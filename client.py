@@ -1,31 +1,72 @@
-import socket
+#!/usr/bin/env python3
+import socket, sys
 
-host = "www.google.com"
+#create a tcp socket
+def create_tcp_socket():
+    print('Creating socket')
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    except socket.error as err:
+        print(f'Failed to create socket. Error code: {err.code} , Error message : {err}')
+        sys.exit()
+    print('Socket created successfully')
+    return s
 
-#https://www.geeks3d.com/hacklab/20190110/python-3-simple-http-request-with-the-socket-module/
-# SOURCE WHERE WE GOT THIS!!!!
-try:
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    print("Socket connected successfully")
-except socket.error as err:
-    print("Socket conenction failed with error: %s" %(err))
+#get host information
+def get_remote_ip(host):
+    print(f'Getting IP for {host}')
+    try:
+        remote_ip = socket.gethostbyname( host )
+    except socket.gaierror:
+        print ('Hostname could not be resolved. Exiting')
+        sys.exit()
 
-# port 80 is the default for socket
-port = 80
+    print (f'Ip address of {host} is {remote_ip}')
+    return remote_ip
 
-try:
-    host_ip = socket.gethostbyname(host)
-except socket.gaierror:
-    print("error getting host ip")
-    sys.exit()
+#send data to server
+def send_data(serversocket, payload):
+    print("Sending payload")    
+    try:
+        serversocket.sendall(payload.encode())
+    except socket.error:
+        print ('Send failed')
+        sys.exit()
+    print("Payload sent successfully")
 
-# conencting to the server
-s.connect((host_ip, port))
-request = "GET / HTTP/1.1\r\nHost: %s\n\n" %(host) 
-s.send(bytes(request,'utf-8'))
-result = s.recv(10000)
-while (len(result) > 0):
-    print(result)
-    result = s.recv(10000)   
+def main():
+    try:
+        #define address info, payload, and buffer size
+        host = 'www.google.com'
+        port = 80
+        payload = f'GET / HTTP/1.0\r\nHost: {host}\r\n\r\n'
+        buffer_size = 4096
 
-# DO WE DISCONNECT??
+        #make the socket, get the ip, and connect
+        s = create_tcp_socket()
+
+        remote_ip = get_remote_ip(host)
+
+        s.connect((remote_ip , port))
+        print (f'Socket Connected to {host} on ip {remote_ip}')
+        
+        #send the data and shutdown
+        send_data(s, payload)
+        s.shutdown(socket.SHUT_WR)
+
+        #continue accepting data until no more left
+        full_data = b""
+        while True:
+            data = s.recv(buffer_size)
+            if not data:
+                 break
+            full_data += data
+        print(full_data)
+    except Exception as e:
+        print(e)
+    finally:
+        #always close at the end!
+        s.close()
+if __name__ == "__main__":
+    main()
+
