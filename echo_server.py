@@ -22,9 +22,11 @@ def main():
         while True:
             conn, addr = s.accept()
             print("Connected by", addr)
+            print("Conn: ",conn)
             
             #recieve data, wait a bit, then send it back
             full_data = conn.recv(BUFFER_SIZE)
+            print("Data: ",full_data)
             time.sleep(0.5)
             conn.sendall(full_data)
             conn.close()
