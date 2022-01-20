@@ -7,7 +7,7 @@ def create_tcp_socket():
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     except socket.error as err:
-        print(f'Failed to create socket. Error code: {err[0]} , Error message : {err[1]}')
+        print(f'Failed to create socket. Error code: {err.errno} , Error message : {err.strerror}')
         sys.exit()
     print('Socket created successfully')
     return s
